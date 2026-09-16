@@ -10,6 +10,7 @@ export class MouseLookController {
   private sensitivity = 0.002;
 
   private isFirstClick = true;
+  private locked = false;
 
   constructor(camera: THREE.PerspectiveCamera, domElement: HTMLElement) {
     this.camera = camera;
@@ -21,10 +22,8 @@ export class MouseLookController {
   }
 
   private handleClick = () => {
-    // 최초 클릭일 때만 원점을 바라봄
     if (this.isFirstClick) {
       this.lookAtOrigin();
-
       this.isFirstClick = false;
     }
 
@@ -46,13 +45,16 @@ export class MouseLookController {
 
     this.pitch = THREE.MathUtils.clamp(this.pitch, -maxPitch, maxPitch);
 
-    this.camera.rotation.order = "YXZ";
-
-    this.camera.rotation.y = this.yaw;
-    this.camera.rotation.x = this.pitch;
+    this.applyRotation();
   }
 
   private handleMouseMove = (event: MouseEvent) => {
+    // 행성 탐험 모드에서는 마우스 시점 변경 금지
+    if (this.locked) {
+      return;
+    }
+
+    // Pointer Lock 상태가 아니면 무시
     if (document.pointerLockElement !== this.domElement) {
       return;
     }
@@ -65,11 +67,32 @@ export class MouseLookController {
 
     this.pitch = THREE.MathUtils.clamp(this.pitch, -maxPitch, maxPitch);
 
+    this.applyRotation();
+  };
+
+  private applyRotation() {
     this.camera.rotation.order = "YXZ";
 
     this.camera.rotation.y = this.yaw;
+
     this.camera.rotation.x = this.pitch;
-  };
+  }
+
+  /**
+   * 현재 카메라의 rotation을
+   * 마우스 컨트롤러의 yaw / pitch에 반영
+   */
+  syncFromCamera() {
+    this.camera.rotation.order = "YXZ";
+
+    this.yaw = this.camera.rotation.y;
+
+    this.pitch = this.camera.rotation.x;
+  }
+
+  setLocked(locked: boolean) {
+    this.locked = locked;
+  }
 
   dispose() {
     this.domElement.removeEventListener("click", this.handleClick);

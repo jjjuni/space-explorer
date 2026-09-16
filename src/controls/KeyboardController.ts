@@ -8,6 +8,8 @@ export class KeyboardController {
     backward: false,
     left: false,
     right: false,
+    up: false,
+    down: false,
   };
 
   private velocity = new THREE.Vector3();
@@ -15,9 +17,9 @@ export class KeyboardController {
   private forward = new THREE.Vector3();
   private right = new THREE.Vector3();
 
-  private maxSpeed = 15;
-  private acceleration = 8;
-  private deceleration = 4;
+  private maxSpeed = 30;
+  private acceleration = 10;
+  private deceleration = 10;
 
   constructor(camera: THREE.PerspectiveCamera) {
     this.camera = camera;
@@ -44,6 +46,14 @@ export class KeyboardController {
       case "KeyD":
         this.keys.right = true;
         break;
+
+      case "Space":
+        this.keys.up = true;
+        break;
+
+      case "KeyC":
+        this.keys.down = true;
+        break;
     }
   };
 
@@ -63,6 +73,14 @@ export class KeyboardController {
 
       case "KeyD":
         this.keys.right = false;
+        break;
+
+      case "Space":
+        this.keys.up = false;
+        break;
+
+      case "KeyC":
+        this.keys.down = false;
         break;
     }
   };
@@ -90,10 +108,20 @@ export class KeyboardController {
       movement.add(this.right);
     }
 
+    if (this.keys.up) {
+      movement.y += 1;
+    }
+
+    if (this.keys.down) {
+      movement.y -= 1;
+    }
+
     if (movement.lengthSq() > 0) {
       movement.normalize();
 
-      this.velocity.add(movement.multiplyScalar(this.acceleration * delta));
+      this.velocity.add(
+        movement.clone().multiplyScalar(this.acceleration * delta),
+      );
 
       if (this.velocity.length() > this.maxSpeed) {
         this.velocity.normalize().multiplyScalar(this.maxSpeed);
@@ -109,6 +137,18 @@ export class KeyboardController {
     }
 
     this.camera.position.add(this.velocity.clone().multiplyScalar(delta));
+  }
+
+  decelerate(delta: number) {
+    const speed = this.velocity.length();
+
+    if (speed <= 0) {
+      return;
+    }
+
+    const newSpeed = Math.max(0, speed - this.deceleration * 3 * delta);
+
+    this.velocity.normalize().multiplyScalar(newSpeed);
   }
 
   dispose() {
