@@ -26,7 +26,8 @@ export class WarpScene {
   private isExiting = false;
   private exitProgress = 0;
 
-  private readonly exitDuration = 1;
+  // 워프 가속 시간
+  private readonly exitDuration = 1.5;
 
   // =========================================================
   // Mouse Look
@@ -47,8 +48,8 @@ export class WarpScene {
   // Stars
   // =========================================================
 
-  private readonly starCount = 1000;
-  private readonly starDepth = 2000;
+  private readonly starCount = 2000;
+  private readonly starDepth = 4000;
 
   private readonly minStarLength = 20;
   private readonly maxStarLength = 65;
@@ -74,7 +75,7 @@ export class WarpScene {
       75,
       container.clientWidth / container.clientHeight,
       0.1,
-      3000,
+      4000,
     );
 
     this.camera.position.set(0, 0, 0);
@@ -103,9 +104,7 @@ export class WarpScene {
     const nebula = createNebula();
 
     this.nebula = nebula.mesh;
-
     this.nebulaGeometry = nebula.geometry;
-
     this.nebulaMaterial = nebula.material;
 
     this.scene.add(this.nebula);
@@ -117,9 +116,7 @@ export class WarpScene {
     const stars = this.createWarpStars();
 
     this.stars = stars.stars;
-
     this.starGeometry = stars.geometry;
-
     this.starMaterial = stars.material;
 
     this.scene.add(this.stars);
@@ -129,7 +126,6 @@ export class WarpScene {
     // =====================================================
 
     window.addEventListener("resize", this.handleResize);
-
     window.addEventListener("mousemove", this.handleMouseMove);
 
     // =====================================================
@@ -210,15 +206,11 @@ export class WarpScene {
       const brightness = THREE.MathUtils.randFloat(0.65, 1);
 
       colors[i6] = color.r * brightness;
-
       colors[i6 + 1] = color.g * brightness;
-
       colors[i6 + 2] = color.b * brightness;
 
       colors[i6 + 3] = color.r * brightness * 0.05;
-
       colors[i6 + 4] = color.g * brightness * 0.05;
-
       colors[i6 + 5] = color.b * brightness * 0.05;
     }
 
@@ -254,12 +246,10 @@ export class WarpScene {
       return;
     }
 
-    // 마우스 이동량
     this.targetYaw -= event.movementX * this.mouseSensitivity;
 
     this.targetPitch -= event.movementY * this.mouseSensitivity;
 
-    // 위아래 회전 제한
     this.targetPitch = THREE.MathUtils.clamp(
       this.targetPitch,
       -this.maxPitch,
@@ -268,7 +258,6 @@ export class WarpScene {
   };
 
   private updateMouseLook() {
-    // 부드럽게 따라가기
     this.yaw = THREE.MathUtils.lerp(
       this.yaw,
       this.targetYaw,
@@ -281,7 +270,6 @@ export class WarpScene {
       this.mouseSmoothness,
     );
 
-    // Euler 순서
     this.camera.rotation.order = "YXZ";
 
     this.camera.rotation.y = this.yaw;
@@ -304,10 +292,8 @@ export class WarpScene {
 
     this.updateWarp(delta);
 
-    // 마우스 시점
     this.updateMouseLook();
 
-    // Render
     this.renderer.render(this.scene, this.camera);
   };
 
@@ -316,9 +302,14 @@ export class WarpScene {
   // =========================================================
 
   private updateWarp(delta: number) {
-    const currentSpeed = this.isExiting
-      ? THREE.MathUtils.lerp(4, 8, 1 - Math.pow(1 - this.exitProgress, 3))
-      : 4;
+    const progress = this.isExiting
+      ? THREE.MathUtils.clamp(this.exitProgress, 0, 1)
+      : 0;
+
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    // 4 → 8
+    const currentSpeed = THREE.MathUtils.lerp(4, 12, eased);
 
     // 카메라 전진
     this.camera.position.z -= currentSpeed * 60 * delta;
@@ -327,14 +318,13 @@ export class WarpScene {
       return;
     }
 
+    // 가속 진행
     this.exitProgress += delta / this.exitDuration;
 
-    const progress = THREE.MathUtils.clamp(this.exitProgress, 0, 1);
-
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const nextProgress = THREE.MathUtils.clamp(this.exitProgress, 0, 1);
 
     // FOV 증가
-    this.camera.fov = THREE.MathUtils.lerp(75, 110, eased);
+    this.camera.fov = THREE.MathUtils.lerp(75, 110, nextProgress);
 
     this.camera.updateProjectionMatrix();
   }
@@ -370,7 +360,6 @@ export class WarpScene {
     }
 
     const width = this.container.clientWidth;
-
     const height = this.container.clientHeight;
 
     this.camera.aspect = width / height;

@@ -11,6 +11,7 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
   const warpSceneRef = useRef<WarpScene | null>(null);
 
   const [isWarpFading, setIsWarpFading] = useState(false);
+  const [isFadeOut, setIsFadeOut] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
   // 워프 진행률
@@ -117,13 +118,12 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
   // =====================================================
 
   useEffect(() => {
-    if (!isLoaded) {
+    if (!isWarpFading) {
       return;
     }
 
     const startTime = performance.now();
 
-    // 20 → 100
     const duration = 500;
 
     let animationId = 0;
@@ -131,14 +131,15 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
     const animateSpeed = (now: number) => {
       const progress = Math.min((now - startTime) / duration, 1);
 
-      // ease-out
       const eased = 1 - Math.pow(1 - progress, 3);
 
       const speed = Math.round(20 + (100 - 20) * eased);
 
       setDisplaySpeed(speed);
 
-      animationId = requestAnimationFrame(animateSpeed);
+      if (progress < 1) {
+        animationId = requestAnimationFrame(animateSpeed);
+      }
     };
 
     animationId = requestAnimationFrame(animateSpeed);
@@ -146,7 +147,7 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [isLoaded]);
+  }, [isWarpFading]);
 
   // =====================================================
   // Loading Complete
@@ -168,35 +169,50 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
     }
 
     // ===================================================
-    // 로딩 완료 후 잠시 대기
+    // 로딩 완료 후 800ms 대기
     // ===================================================
 
     const delayId = window.setTimeout(() => {
+      /*
+       * Warp Exit 시작
+       *
+       * 여기서 WarpScene이
+       * 0.5초 동안 4 → 8로 가속한다.
+       */
       setIsWarpFading(true);
 
-      // =================================================
-      // Warp Exit
-      // =================================================
-
       warpScene.startExit(() => {
-        // ==============================================
-        // WarpScene 완전 제거
-        // ==============================================
+        /*
+         * Warp 가속 완료
+         *
+         * 이제 실제 Fade Out을 시작하기 위해
+         * 500ms 대기 후 isFadeOut을 true로 만든다.
+         */
+        const fadeDelayId = window.setTimeout(() => {
+          setIsFadeOut(true);
 
-        warpScene.dispose();
-        warpSceneRef.current = null;
+          /*
+           * CSS Fade Out은 800ms
+           *
+           * Fade가 끝난 뒤 SpaceScene을 시작한다.
+           */
+          const completeDelayId = window.setTimeout(() => {
+            warpScene.dispose();
+            warpSceneRef.current = null;
 
-        // ==============================================
-        // LoadingScreen 제거
-        // ==============================================
+            setIsVisible(false);
 
-        setIsVisible(false);
+            onComplete();
+          }, 800);
 
-        // ==============================================
-        // SpaceScene 시작
-        // ==============================================
+          return () => {
+            window.clearTimeout(completeDelayId);
+          };
+        }, 500);
 
-        onComplete();
+        return () => {
+          window.clearTimeout(fadeDelayId);
+        };
       });
     }, 800);
 
@@ -222,8 +238,8 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
       className={[
         "absolute inset-0 z-20",
         "bg-[#01020a]",
-        "transition-opacity duration-500 ease-out",
-        isWarpFading ? "opacity-0" : "opacity-100",
+        "transition-opacity duration-800 ease-out",
+        isFadeOut ? "opacity-0" : "opacity-100",
       ].join(" ")}
     >
       {/* =================================================
@@ -260,8 +276,6 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
 
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {/* Status */}
-
               <div className="relative h-2 w-2">
                 <span
                   className={[

@@ -7,7 +7,7 @@ interface CreateNebulaResult {
 }
 
 export function createNebula(): CreateNebulaResult {
-  const geometry = new THREE.SphereGeometry(2000, 8, 8);
+  const geometry = new THREE.SphereGeometry(4000, 8, 8);
 
   const material = new THREE.ShaderMaterial({
     side: THREE.BackSide,
