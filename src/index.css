@@ -21,32 +21,6 @@ body {
   height: 100%;
 }
 
-@keyframes prompt-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes loading {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  50% {
-    transform: translateX(100%);
-  }
-
-  100% {
-    transform: translateX(200%);
-  }
-}
-
 body {
   cursor:
     url("/cursor.png") 8 8,

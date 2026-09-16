@@ -18,7 +18,7 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
   const [warpProgress, setWarpProgress] = useState(0);
 
   // 표시 속도
-  const [displaySpeed, setDisplaySpeed] = useState(20);
+  const [displaySpeed, setDisplaySpeed] = useState(10000);
 
   // =====================================================
   // Warp Scene 생성
@@ -124,7 +124,7 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
 
     const startTime = performance.now();
 
-    const duration = 500;
+    const duration = 2000;
 
     let animationId = 0;
 
@@ -133,7 +133,7 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
 
       const eased = 1 - Math.pow(1 - progress, 3);
 
-      const speed = Math.round(20 + (100 - 20) * eased);
+      const speed = Math.round(100 + (300000 - 100) * eased);
 
       setDisplaySpeed(speed);
 
@@ -173,29 +173,12 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
     // ===================================================
 
     const delayId = window.setTimeout(() => {
-      /*
-       * Warp Exit 시작
-       *
-       * 여기서 WarpScene이
-       * 0.5초 동안 4 → 8로 가속한다.
-       */
       setIsWarpFading(true);
 
       warpScene.startExit(() => {
-        /*
-         * Warp 가속 완료
-         *
-         * 이제 실제 Fade Out을 시작하기 위해
-         * 500ms 대기 후 isFadeOut을 true로 만든다.
-         */
         const fadeDelayId = window.setTimeout(() => {
           setIsFadeOut(true);
 
-          /*
-           * CSS Fade Out은 800ms
-           *
-           * Fade가 끝난 뒤 SpaceScene을 시작한다.
-           */
           const completeDelayId = window.setTimeout(() => {
             warpScene.dispose();
             warpSceneRef.current = null;
@@ -221,17 +204,9 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
     };
   }, [isLoaded, isWarpFading, onComplete]);
 
-  // =====================================================
-  // LoadingScreen 제거
-  // =====================================================
-
   if (!isVisible) {
     return null;
   }
-
-  // =====================================================
-  // Render
-  // =====================================================
 
   return (
     <div
@@ -242,15 +217,7 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
         isFadeOut ? "opacity-0" : "opacity-100",
       ].join(" ")}
     >
-      {/* =================================================
-          Warp Scene
-      ================================================= */}
-
       <div ref={containerRef} className="absolute inset-0" />
-
-      {/* =================================================
-          Warp Drive HUD
-      ================================================= */}
 
       <div
         className={[
@@ -270,10 +237,6 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
             "backdrop-blur-md",
           ].join(" ")}
         >
-          {/* =================================================
-              Header
-          ================================================= */}
-
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative h-2 w-2">
@@ -319,10 +282,6 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
             </span>
           </div>
 
-          {/* =================================================
-              Speed
-          ================================================= */}
-
           <div className="flex items-end gap-2">
             <span
               className={[
@@ -334,7 +293,7 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
                 "text-white/90",
               ].join(" ")}
             >
-              {String(displaySpeed)}
+              {displaySpeed.toLocaleString()}
             </span>
 
             <span
@@ -348,10 +307,6 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
               KM/S
             </span>
           </div>
-
-          {/* =================================================
-              Gauge
-          ================================================= */}
 
           <div className="mt-4">
             <div
@@ -380,10 +335,6 @@ function LoadingScreen({ isLoaded, onComplete }: LoadingScreenProps) {
               <span className="text-[8px] text-white/20">100%</span>
             </div>
           </div>
-
-          {/* =================================================
-              Status
-          ================================================= */}
 
           <div
             className={[
