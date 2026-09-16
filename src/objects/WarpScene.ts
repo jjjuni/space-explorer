@@ -23,12 +23,6 @@ export class WarpScene {
   private clock = new THREE.Clock();
   private animationId = 0;
 
-  // =========================================================
-  // Warp
-  // =========================================================
-
-  private speed = 2;
-
   private isExiting = false;
   private exitProgress = 0;
 
@@ -338,9 +332,6 @@ export class WarpScene {
     const progress = THREE.MathUtils.clamp(this.exitProgress, 0, 1);
 
     const eased = 1 - Math.pow(1 - progress, 3);
-
-    // 속도 증가
-    this.speed = THREE.MathUtils.lerp(4, 8, eased);
 
     // FOV 증가
     this.camera.fov = THREE.MathUtils.lerp(75, 110, eased);
