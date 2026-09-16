@@ -48,8 +48,8 @@ export class WarpScene {
   // Stars
   // =========================================================
 
-  private readonly starCount = 2000;
-  private readonly starDepth = 4000;
+  private readonly starCount = 4000;
+  private readonly starDepth = 20000;
 
   private readonly minStarLength = 20;
   private readonly maxStarLength = 65;
@@ -75,7 +75,7 @@ export class WarpScene {
       75,
       container.clientWidth / container.clientHeight,
       0.1,
-      4000,
+      3000,
     );
 
     this.camera.position.set(0, 0, 0);
@@ -166,9 +166,9 @@ export class WarpScene {
       // 카메라 앞쪽 공간에 별 배치
       // -----------------------------------------------
 
-      const x = THREE.MathUtils.randFloat(-500, 500);
+      const x = THREE.MathUtils.randFloat(-750, 750);
 
-      const y = THREE.MathUtils.randFloat(-500, 500);
+      const y = THREE.MathUtils.randFloat(-750, 750);
 
       const z = THREE.MathUtils.randFloat(-this.starDepth, 0);
 
@@ -278,6 +278,15 @@ export class WarpScene {
   }
 
   // =========================================================
+  // Nebula
+  // =========================================================
+
+  private updateNebula() {
+    // 네뷸라를 항상 카메라 주변에 유지
+    this.nebula.position.copy(this.camera.position);
+  }
+
+  // =========================================================
   // Animation
   // =========================================================
 
@@ -291,6 +300,8 @@ export class WarpScene {
     const delta = this.clock.getDelta();
 
     this.updateWarp(delta);
+
+    this.updateNebula();
 
     this.updateMouseLook();
 
@@ -308,7 +319,7 @@ export class WarpScene {
 
     const eased = 1 - Math.pow(1 - progress, 3);
 
-    // 4 → 8
+    // 4 → 12
     const currentSpeed = THREE.MathUtils.lerp(4, 12, eased);
 
     // 카메라 전진
@@ -339,6 +350,7 @@ export class WarpScene {
     }
 
     this.isExiting = true;
+
     this.exitProgress = 0;
 
     window.setTimeout(() => {
@@ -360,6 +372,7 @@ export class WarpScene {
     }
 
     const width = this.container.clientWidth;
+
     const height = this.container.clientHeight;
 
     this.camera.aspect = width / height;
@@ -389,9 +402,11 @@ export class WarpScene {
     window.removeEventListener("mousemove", this.handleMouseMove);
 
     this.starGeometry.dispose();
+
     this.starMaterial.dispose();
 
     this.nebulaGeometry.dispose();
+
     this.nebulaMaterial.dispose();
 
     this.renderer.dispose();
